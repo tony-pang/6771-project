@@ -1,4 +1,4 @@
-function [ImageOut,hist]=histogramMatching(ImageToMod,ImageTarget)
+function IFinal=histogramMatching(ImageToMod,ImageTarget)
     %load images
     Is = imread(ImageToMod);
     It = imread(ImageTarget);
@@ -15,12 +15,12 @@ function [ImageOut,hist]=histogramMatching(ImageToMod,ImageTarget)
     [IsbEQ,IsbEQhist]=HistEqual(Is,3,IsbCdf);
     IsEQ = im2double(cat(3,IsrEQ,IsgEQ,IsbEQ));
     
-    
+    %histogram matching for non equalized image
     RnonEQ= histMatch(Is(:,:,1),IsrCdf,ItrCdf);
     GnonEQ= histMatch(Is(:,:,2),IsgCdf,ItgCdf);
     BnonEQ= histMatch(Is(:,:,3),IsbCdf,ItbCdf);
     FnonEQ = im2double(cat(3,RnonEQ,GnonEQ,BnonEQ));
-   
+    %histogtam matching for equalized image
     RFinal= histMatch(IsrEQ,IsrEQhist,ItrCdf);
     GFinal= histMatch(IsgEQ,IsgEQhist,ItgCdf);
     BFinal= histMatch(IsbEQ,IsbEQhist,ItgCdf);
@@ -50,18 +50,16 @@ function [ImageOut,hist]=histogramMatching(ImageToMod,ImageTarget)
     subplot(5,4,18);imhist(It(:,:,1),64);
     subplot(5,4,19);imhist(It(:,:,2),64);
     subplot(5,4,20);imhist(It(:,:,3),64);
-    
-    
-    
+   
     function [imageMod, newhist] = HistEqual(image,layer,cdf)
         histeq = zeros(1,256);
         for i=1:256
-            histeq(i)=round(255*cdf(i));
+            histeq(i)=round(255*cdf(i));%convert cdf to intensity
         end
         imageMod = zeros(size(image,1),size(image,2),'uint8');
         for i=1:size(image,1)
             for j=1:size(image,2);
-            imageMod(i,j)=histeq(image(i,j,layer)+1);
+            imageMod(i,j)=histeq(image(i,j,layer)+1);%match the values in image
             end
         end
         newhist = HistCdfLayer(imageMod,1);
@@ -74,15 +72,15 @@ function [ImageOut,hist]=histogramMatching(ImageToMod,ImageTarget)
         Layerhist = imhist(Layer); 
         %get total pixels
         total = sum(Layerhist);
+        
         %get cdf of each layer
         histCdf = zeros(1,size(Layerhist,1));
-
         for i=1:size(Layerhist,1)
             if i==1
                 histCdf(i)=Layerhist(i,1)/total;
             else
                 histCdf(i)=Layerhist(i,1)/total+histCdf(i-1);
-            end
+            end %calculate cdf
         end
     end
     
@@ -92,8 +90,11 @@ function [ImageOut,hist]=histogramMatching(ImageToMod,ImageTarget)
         mapping = zeros(256,1);
         for i = 1:256
             for j = mapping(i)+1:256
-                if (cdfDesired(j)-cdfimage(i))>=0
+                if (cdfDesired(j)-cdfimage(i))>=0 
+                    %search for the smallest desired value that has the
+                    %same cdf as that of the image of interest
                     mapping(i)=j;
+                    %store that value in the mapping vector
                     break;
                 end
             end
@@ -102,6 +103,7 @@ function [ImageOut,hist]=histogramMatching(ImageToMod,ImageTarget)
         for i = 1:size(image,1)
             for j= 1:size(image,2)
                 ImageFinalLayer(i,j)=mapping(image(i,j)+1);
+                %convert the image with mapping check table
             end
         end
     end
