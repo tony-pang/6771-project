@@ -25,14 +25,8 @@ plot(iT30);
 F = ifftshift(fft2(fftshift(I)));
 FLA = log(abs(F)+1);
 subplot(245);
-imshow(mat2gray(FLA));
+imshow(mat2gray(FLA));%show FT
 
-thetaDegree = 1; 
-theta = linspace(0,179,180);
-Fsize = size(F,1);
-d_omega = 2*pi/(Fsize);
-t = [0:(Fsize/2-1),(-Fsize/2):-1] * (d_omega); 
-t = fftshift(t);
 
 
 for i =-320:320
